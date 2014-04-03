@@ -1,0 +1,539 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <!--[if IE]><script type="text/javascript" src="excanvas.compiled.js"></script><![endif]-->	
+    <title>Subversion Stats Plot for None</title>
+    <style type="text/css">
+	th {background-color: #F5F5F5; text-align:center}
+	/*td {background-color: #FFFFF0}*/
+	h3 {background-color: transparent;margin:2}
+	h4 {background-color: transparent;margin:1}
+	.graph {
+        display: block;
+        margin-left:auto;margin-right:auto;
+        height:200px;width:200px;
+    }
+    #GraphPopBox {
+        display: none;
+		position: fixed;
+		top: 15%;
+		left: 15%;
+		right: 15%;
+		bottom: 15%;
+		margin:0px;
+		padding:0px;
+        background-color:#778899;
+		z-index:1002;		
+		overflow: none;
+		#overflow: auto;		
+    }
+    #Graph_big {
+        position:absolute;
+        top:40px;
+        left:5px;
+        bottom:5px;
+        right:5px;
+        border : 2px solid black;
+        padding: 10px;
+        background-color: white;
+		#border: 16px solid black;		
+		}
+	#closebtn {
+        display:block;
+        color:white;
+        float:right;
+        z-index:1005;
+        margin:5px;
+        padding:5px;
+	}	
+	</style>
+	<link type="text/css" rel="stylesheet" href="jquery.jqplot.min.css"/>		
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.jqplot.js"></script>	
+	<script type="text/javascript" src="jqplot.dateAxisRenderer.min.js"></script>	
+	<script type="text/javascript" src="jqplot.categoryAxisRenderer.min.js"></script>
+	<script type="text/javascript" src="jqplot.barRenderer.min.js"></script>
+	<script type="text/javascript" src="jqplot.pieRenderer.min.js"></script>
+    <script type="text/javascript">  
+            function locgraph(divElemId,showLegend) {
+            var locdata = [];
+            var plot = $.jqplot(divElemId, [locdata], {
+                title:'Lines of Code',
+                axes:{
+                    xaxis:{renderer:$.jqplot.DateAxisRenderer, label:'LoC'},
+                    yaxis:{min:0}
+                },
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+                return(plot);                   
+             };
+        </script>
+	<script type="text/javascript">
+            function locChurnGraph(divElemId, showLegend) {
+            var locdata = [];
+            var churndata= [];
+            
+            var plot = $.jqplot(divElemId, [locdata, churndata], {
+                title:'Lines of Code and Churn Graph',
+                legend:{show:showLegend},
+                axes:{ xaxis:{renderer:$.jqplot.DateAxisRenderer},
+                    yaxis:{label:'LoC', min:0},
+                    y2axis:{label:'Churn', min:0} },
+                series:[
+                    {label:'LoC', lineWidth:2, markerOptions:{style:'filledCircle',size:2}},
+                    {label:'Churn',yaxis:'y2axis',lineWidth:2, markerOptions:{style:'filledCircle',size:2}}
+                ]
+            });
+            return(plot);
+        };
+        </script>	
+	<script type="text/javascript">
+            function contri_locgraph(divElemId, showLegend) {
+            var locdata = [];
+
+             var plot = $.jqplot(divElemId, locdata, {
+                legend:{show:showLegend}, 
+                title:'Contributed Lines of Code',
+                axes:
+                {
+                    xaxis:{renderer:$.jqplot.DateAxisRenderer, label:'LoC'},
+                    yaxis:{min:0}
+                },
+                series:[]
+                });
+              return(plot);
+            };
+        </script>
+	<script type="text/javascript">        
+            function avglocgraph(divElemId,showLegend) {
+            var locdata = [];
+            var plot = $.jqplot(divElemId, [locdata], {
+                title:'Average File LoC',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer},yaxis:{min:0}},
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+                return(plot);
+            };
+        </script>
+	<script type="text/javascript">        
+            function fileCountGraph(divElemId,showLegend) {
+            var data = [['2014-03-18', 4],
+['2014-03-19', 5],
+['2014-03-21', 5]];
+            var plot = $.jqplot(divElemId, [data], {
+                title:'File Count',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer},yaxis:{min:0}},
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+              return(plot);
+            };
+        </script>
+	<script type="text/javascript">        
+            function fileTypesGraph(divElemId,showLegend) {
+            var data = [[2, '.php'],[2, '.svg'],[1, '.png'],[0, '.css']];
+            var plot = $.jqplot(divElemId, [data], {
+                title:'File Types',
+                seriesDefaults:{
+                    renderer:$.jqplot.BarRenderer, 
+                    rendererOptions:{barDirection:'horizontal', barPadding: 6, barMargin:15}, 
+                shadowAngle:135},
+            axes:{
+                xaxis:{min:0}, 
+                yaxis:{renderer:$.jqplot.CategoryAxisRenderer}
+                }
+            });
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">        
+            function directorySizePieGraph(divElemId, showLegend) {
+            var data = [];
+            var plot = $.jqplot(divElemId, [data], {
+                    title: 'Current Directory Size in LoC(Pie)',
+                    legend:{show:showLegend},
+                    seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{sliceMargin:8}}                    
+            });
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">
+            function dirSizeLineGraph(divElemId, showLegend) {
+            var locdata = [];
+
+            var plot = $.jqplot(divElemId, locdata, {
+                legend:{show:showLegend}, 
+                title:'Directory Size(Lines of Code)',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer},yaxis:{min:0}},
+                series:[]
+                });
+                return(plot);
+            };
+        </script>
+	<script type="text/javascript">        
+            function dirFileCountPieGraph(divElemId, showLegend) {
+            var data = [['/code/products (5)', 5]];
+            var plot = $.jqplot(divElemId, [data], {
+                    title: 'Directory File Count (Pie)',
+                    legend:{show:showLegend},
+                    seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{sliceMargin:8}}                    
+            });
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">  
+        function CommitActivityIndexGraph(divElemId,showLegend) {
+            var locdata = [['2014-03-18', 10.0000],
+['2014-03-18', 19.9500],
+['2014-03-18', 29.9357],
+['2014-03-18', 29.9357],
+['2014-03-18', 39.9292],
+['2014-03-18', 39.9292],
+['2014-03-19', 37.6679],
+['2014-03-19', 47.5994],
+['2014-03-19', 57.5278],
+['2014-03-19', 57.5278],
+['2014-03-20', 54.2417]];
+            var plot = $.jqplot(divElemId, [locdata], {
+                title:'Commit Activity Index over time',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer}},
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+                return(plot);    
+            };
+        </script>
+	<script type="text/javascript">        
+            function authorsCommitTrend(divElemId,showLegend) {
+            var data = [['0-1 hr',6],['1-4 hrs',1],['4hrs-1 day',3],['1-2 days',0],['2-4 days',0],['4-8 days',0],['8-16 days',0]];
+            var plot = $.jqplot(divElemId, [data], {
+                title:'Authors Commit Trend Histogram',
+                seriesDefaults:{
+                    renderer:$.jqplot.BarRenderer, 
+                    rendererOptions:{barPadding: 6, barMargin:15}, 
+                    shadowAngle:135},                
+            axes:{
+                xaxis:{
+                    renderer:$.jqplot.CategoryAxisRenderer,
+                    label:'Time Between Consecutive Commits by Same Author (in Days)'
+                },
+                yaxis:{min:0}                 
+            }
+            });
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">
+        function doActivityByWeekday(divElemId,data, titletext, showLegend) {
+            var plot = $.jqplot(divElemId, [data], {
+                title:titletext,
+                seriesDefaults:{
+                    renderer:$.jqplot.BarRenderer, 
+                    rendererOptions:{barPadding: 6, barMargin:15}, 
+                shadowAngle:135},                
+            axes:{
+                xaxis:{
+                    renderer:$.jqplot.CategoryAxisRenderer,
+                    label:'Day of Week'
+                    },
+                yaxis:{min:0}                 
+                }
+            });
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">
+            function ActivityByWeekdayAll(divElemId,showLegend) {
+            var data = [['Sun',0],['Mon',0],['Tue',6],['Wed',4],['Thu',1],['Fri',0],['Sat',0]];
+            var titletext = 'Commits by Day of Week (All time)'
+            var plot = doActivityByWeekday(divElemId, data, titletext, showLegend);
+            return(plot);
+        };
+        </script>
+    <script type="text/javascript">
+            function ActivityByWeekdayRecent(divElemId,showLegend) {
+            var data = [['Sun',0],['Mon',0],['Tue',6],['Wed',4],['Thu',1],['Fri',0],['Sat',0]];
+            var titletext = 'Commits by Day of Week (3 months)'
+            var plot = doActivityByWeekday(divElemId, data, titletext, showLegend);
+            return(plot);
+        };
+        </script>
+    <script type="text/javascript">        
+            function doActivityByTimeOfDay(divElemId,data, titletext, showLegend) {            
+            var plot = $.jqplot(divElemId, [data], {
+                title:titletext,
+                seriesDefaults:{
+                    renderer:$.jqplot.BarRenderer, 
+                    rendererOptions:{barPadding: 6, barMargin:10}, 
+                shadowAngle:135},                
+            axes:{
+                xaxis:{
+                    renderer:$.jqplot.CategoryAxisRenderer,
+                    label:'Time of Day'
+                },
+                yaxis:{min:0}                 
+                }
+            });
+            return(plot);
+        };
+        </script>
+    <script type="text/javascript">        
+            function ActivityByTimeOfDayAll(divElemId,showLegend) {
+            var data = [['0',0],['1',0],['2',0],['3',0],['4',0],['5',0],['6',0],['7',0],['8',0],['9',0],['10',0],['11',1],['12',1],['13',1],['14',0],['15',4],['16',2],['17',2],['18',0],['19',0],['20',0],['21',0],['22',0],['23',0]];
+            var titletext = 'Commits By Hour of Day (All time)'
+            var plot = doActivityByTimeOfDay(divElemId, data, titletext,showLegend);
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">        
+            function ActivityByTimeOfDayRecent(divElemId,showLegend) {
+            var data = [['0',0],['1',0],['2',0],['3',0],['4',0],['5',0],['6',0],['7',0],['8',0],['9',0],['10',0],['11',1],['12',1],['13',1],['14',0],['15',4],['16',2],['17',2],['18',0],['19',0],['20',0],['21',0],['22',0],['23',0]];
+            var titletext = 'Commits By Hour of Day (last 3 months)'
+            var plot = doActivityByTimeOfDay(divElemId, data, titletext,showLegend);
+            return(plot);
+        };
+        </script>
+	<script type="text/javascript">        
+            function authorActivityGraph(divElemId, showLegend) {            
+            var addData = [[8.72,1]];
+            var changeData = [[89.73,1]];
+            var delData = [[1.55,1]];
+            var plot = $.jqplot(divElemId, [addData, changeData, delData], {
+                stackSeries: true,
+                title:'Author Activity',
+                legend: {show: showLegend, location: 'ne'},
+                seriesDefaults:{
+                    renderer:$.jqplot.BarRenderer, 
+                    rendererOptions:{barDirection:'horizontal',barPadding: 6, barMargin:15}
+                    },
+                series: [{label: 'Adding', color:'blue'}, {label: 'Modifying', color:'green'}, {label: 'Deleting', color:'red'}],
+                axes:{
+                    yaxis:{
+                    renderer:$.jqplot.CategoryAxisRenderer,
+                    ticks:["lance"]                    
+                    },
+                    xaxis:{min:0, max:100.0}                 
+                    }
+                }
+            );
+            return(plot);
+        }
+        </script>
+	<script type="text/javascript">        
+            function dailyCommitCountGraph(divElemId,showLegend) {
+            var data = [['2014-03-18', 6],
+['2014-03-19', 4],
+['2014-03-20', 1]];
+            var plot = $.jqplot(divElemId, [data], {
+                title:'Daily Commit Count',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer},yaxis:{min:0}},
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+              return(plot);
+            };
+        </script>
+    <script type="text/javascript">        
+            function wasteEffortTrend(divElemId,showLegend) {
+            var data = [['2014-03-18', 0.0000],
+['2014-03-19', 0.0000],
+['2014-03-20', 0.0000]];
+            var plot = $.jqplot(divElemId, [data], {
+                title:'Waste Effort Trend',
+                axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer},
+                    yaxis:{min:0}
+                },
+                series:[{lineWidth:2, markerOptions:{style:'filledCircle',size:2}}]}
+                );
+              return(plot);
+            };
+        </script>
+    
+    <script type="text/javascript">
+			 function showAllGraphs(showLegend) {
+                    locgraph('LoCGraph', showLegend);
+                    /* Not there in this template
+					locChurnGraph('LoCChurnGraph', showLegend);*/                    
+                    contri_locgraph('ContriLoCGraph', showLegend);
+                    avglocgraph('AvgLoCGraph',showLegend);
+                    fileCountGraph('FileCountGraph',showLegend);
+                    fileTypesGraph('FileTypeCountGraph',showLegend);
+                    ActivityByWeekdayAll('ActivityByWeekdayAllGraph',showLegend);
+                    ActivityByWeekdayRecent('ActivityByWeekdayRecentGraph',showLegend);
+                    ActivityByTimeOfDayAll('ActivityByTimeOfDayAllGraph',showLegend);
+                    ActivityByTimeOfDayRecent('ActivityByTimeOfDayRecentGraph',showLegend);
+                    CommitActivityIndexGraph('CommitActIdxGraph',showLegend);
+                    directorySizePieGraph('DirSizePie', showLegend);
+                    dirFileCountPieGraph('DirFileCountPie', showLegend);
+                    dirSizeLineGraph('DirSizeLine', showLegend);
+                    authorsCommitTrend('AuthorsCommitTrend',showLegend);
+                    authorActivityGraph('AuthorActivityGraph', showLegend);
+                    dailyCommitCountGraph('DailyCommitCountGraph', showLegend);
+                    wasteEffortTrend('WasteEffortTrend', showLegend);
+                };
+                
+                function showGraphBox(graphFunc, showLegend) {
+                    var graphboxId = 'GraphPopBox';
+                    var graphBoxElem = document.getElementById(graphboxId);
+                    graphBoxElem.style.display='block';
+                    var graphCanvasId = 'Graph_big'
+                    var plot = graphFunc(graphCanvasId, showLegend);
+                    plot.redraw(true);                                                    
+                };
+                
+                function hideGraphBox() {
+                    var graphboxId = 'GraphPopBox';
+                    var graphBoxElem = document.getElementById(graphboxId);
+                    graphBoxElem.style.display='none';
+                }
+	</script>	
+</head>
+<body onLoad="showAllGraphs(false);">
+<table align="center" frame="box">
+<caption><h1 align="center">Subversion Statistics for None</h1></caption>
+<tr>
+<th colspan=3 align="center"><h3>General Statistics</h3></th>
+</tr>
+<tr>
+    <td colspan=3>
+    
+<table align="center">
+<tr><td>Head Revision Number</td><td>:</td><td>136708</td></tr>
+<tr><td>First Revision Number</td><td>:</td><td>136520</td></tr>
+<tr><td>Last Commit Date</td><td>:</td><td>Mar 20, 2014 12:15 PM</td></tr>
+<tr><td>First Commit Date</td><td>:</td><td>Mar 18, 2014 01:13 PM</td></tr>
+<tr><td>Revision Count</td><td>:</td><td>11</td></tr>
+<tr><td>Author Count</td><td>:</td><td>1</td></tr>
+<tr><td>File Count</td><td>:</td><td>5</td></tr>
+<tr><td>LoC</td><td>:</td><td>0</td></tr> 
+</table>
+
+    </td>
+</tr>
+<tr>
+<tr>
+<th colspan=3 align="center"><h3>Top 10 Hot List </h3></th>
+</tr>
+<tr>
+    <td colspan=3>
+        <table width="100%">
+        <tr>
+            <td width="50%">
+            <p align='center'><b>Top 10 Active Files</b></p>
+            <ol>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/personalization/pages/VisitorActivityPage.php (rev count: 6)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/db/MysqlBroker.php (rev count: 4)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/personalization/VisitorActivityFactory.php (rev count: 4)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/personalization/ActivityProvidingFactory.php (rev count: 4)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/personalization/config.php (rev count: 3)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/shared/db/tests/MysqlBrokerTestCase.php (rev count: 2)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/app/APP_EntryActivityProvidingFactory.php (rev count: 1)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/templates/www/shared/content/component_inputs/page_rating.html (rev count: 1)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/lib/php/custom/alliance/Alliance_LocationSearch.php (rev count: 1)</li>
+<li>/code/products/amm/branches/hotfix-5182-remove-all-activity/templates/email/custom/alliance/application_pending.txt (rev count: 1)</li>
+</ol>
+
+            </td>
+            <td>
+            <p align='center'><b>Top 10 Active Authors</b></p>
+            <ol>
+<li>lance</li>
+</ol>
+
+            </td>
+        </tr>
+        </table>
+    </td>
+</tr>
+<tr>
+<th colspan=3 align="center"><h3>Lines of Code Graphs </h3></th>
+</tr>
+<tr>
+    <td align="center">
+    <div id="LoCGraph" class="graph" onclick ="showGraphBox(locgraph, true);"></div>
+    </td>
+    <td align="center">
+    <div id="ContriLoCGraph" class="graph" onclick ="showGraphBox(contri_locgraph, true);"></div>
+    </td>
+    <td align="center">
+    <div id="AvgLoCGraph" class="graph" onclick ="showGraphBox(avglocgraph, true);"></div>
+    </td>    
+</tr>
+<tr>
+<th colspan=3 align="center"><h3>File Count Graphs </h3></th>
+</tr>
+<tr>
+    <td align="center">
+    <div id="FileCountGraph" class="graph" onclick ="showGraphBox(fileCountGraph, true);"></div>
+    </td>
+    <td align="center" >
+    <div id="FileTypeCountGraph" class="graph" onclick ="showGraphBox(fileTypesGraph, true);"></div>
+    </td>
+    <td>&nbsp</td>
+</tr>
+<tr>
+<th colspan=3 align="center"><h3>Directory Size Graphs </h3></th>
+</tr>
+<tr>
+   <td align="center">
+    <div id="DirSizePie" class="graph" onclick ="showGraphBox(directorySizePieGraph, true);"></div>
+    </td>
+    <td align="center">
+    <div id="DirSizeLine" class="graph" onclick ="showGraphBox(dirSizeLineGraph, true);"></div>
+    </td>
+    <td align="center">
+    <div id="DirFileCountPie" class="graph" onclick ="showGraphBox(dirFileCountPieGraph, true);"></div>
+    </td>
+</tr>
+<tr>
+<th colspan=3 align="center"><h3>Commit Activity Graphs</h3></th>
+</tr>
+<tr>
+    <td align="center" >
+        <div id="CommitActIdxGraph" class="graph" onclick ="showGraphBox(CommitActivityIndexGraph, true);"></div>
+    </td>    
+    <td align="center" >
+    <div id="ActivityByWeekdayAllGraph" class="graph" onclick ="showGraphBox(ActivityByWeekdayAll, true);"></div>
+    </td>
+    <td align="center" >
+    <div id="ActivityByWeekdayRecentGraph" class="graph" onclick ="showGraphBox(ActivityByWeekdayRecent, true);"></div>
+    </td>
+</tr>
+<tr>
+    <td align="center" >
+    <div id="DailyCommitCountGraph" class="graph" onclick ="showGraphBox(dailyCommitCountGraph, true);"></div>
+    </td>    
+    <td align="center" >
+    <div id="ActivityByTimeOfDayAllGraph" class="graph" onclick ="showGraphBox(ActivityByTimeOfDayAll, true);"></div>
+    </td>
+    <td align="center" >
+    <div id="ActivityByTimeOfDayRecentGraph" class="graph" onclick ="showGraphBox(ActivityByTimeOfDayRecent, true);"></div>
+    </td>    
+</tr>
+<tr>
+    <td align="center" >
+        <div id="AuthorsCommitTrend" class="graph" onclick ="showGraphBox(authorsCommitTrend, true);"></div>
+    </td>
+    <td align="center">
+        <div id="AuthorActivityGraph" class="graph" onclick ="showGraphBox(authorActivityGraph, true);"></div>
+    </td>
+    <td align="center">
+        <div id="WasteEffortTrend" class="graph" onclick ="showGraphBox(wasteEffortTrend, true);"></div>
+    </td>    
+</tr>
+<th colspan=3 align="center"><h3>Log Message Tag Cloud</h3></th>
+</tr>
+<tr id='tagcloud'>
+<td colspan=3 align="center"></td>
+</tr>
+<th colspan=3 align="center"><h3>Author Cloud</h3></th>
+</tr>
+<tr id='authcloud'>
+<td colspan=3 align="center"><font size="+0" color="#000080">lance</font>
+</td>
+</tr>
+</table>
+    <div id="GraphPopBox">
+        <h3 id="closebtn" onClick="hideGraphBox();">Close[X]</h3>
+        <div id="Graph_big"></div>
+    </div>    
+</body>
+</html>
