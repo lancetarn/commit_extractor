@@ -17,8 +17,24 @@
 		</div>
 		<script src="/static/bower_components/flot/jquery.js"> </script>
 		<script src="/static/bower_components/flot/jquery.flot.js"> </script>
+		<script src="/static/bower_components/flot/jquery.flot.time.js"> </script>
 			<script>
-				var plotData = {{ commits|safe }};
+				( function( $ ) {
+					var commitData = {{ commits|safe }};
+					var plotData = commitData.map( function( commit ) {
+						changes = commit.changedfiles + commit.addedfiles + commit.deletedfiles;
+						commit_date = new Date( commit.commitdate.split( ' ' ).join( 'T' ))
+						return [ commit_date.getTime( ), changes ];
+					} );
+					console.log(plotData);
+
+					var options = {
+						xaxis : {
+							mode : "time",
+						}
+					}
+					$.plot( $( '#placeholder' ), [ plotData ], options );
+				}( jQuery ) );
 			</script>
 	</body>
 </html>
