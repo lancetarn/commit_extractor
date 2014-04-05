@@ -2,3 +2,4 @@ SVN*
 .DS_Store
 subvision.db
 *.pyc
+*.swp
