@@ -104,15 +104,16 @@ class SVNLog2Sqlite:
         update the filepath id if required.
         '''
         id = None
-        if( filepath ):
+        if(filepath):
             querycur=self.dbcon.cursor()
-            querycur.execute('select id from SVNPaths where path = ?', (filepath,))
-            resultrow = querycur.fetchone()
-            if( resultrow == None):
+            rows = querycur.execute('select id from SVNPaths where path = ?', (filepath,))
+            if(rows == 1):
+                path = querycur.fetchone()
+                id = path[0]
+            else:
                 updcur.execute('INSERT INTO SVNPaths(path) values(?)', (filepath,))
-                querycur.execute('select id from SVNPaths where path = ?', (filepath,))
-                resultrow = querycur.fetchone()
-            id = resultrow[0]
+                id = updcur.lastrowid()
+
             querycur.close()
             
         return(id)
@@ -137,13 +138,13 @@ class SVNLog2Sqlite:
                 logging.debug("Revision date:%s" % revlog.date)
                 logging.debug("Revision msg:%s" % revlog.message)
                 revcount = revcount+1
-                
+
                 addedfiles, changedfiles, deletedfiles = revlog.changedFileCount()                
                 if( revlog.isvalid() == True):
                     updcur.execute("INSERT into SVNLog(revno, commitdate, author, msg, addedfiles, changedfiles, deletedfiles) \
                                 values(?, ?, ?, ?,?, ?, ?)",
                                 (revlog.revno, revlog.date, revlog.author, revlog.message, addedfiles, changedfiles, deletedfiles))
-                    
+
                     for change in revlog.getDiffLineCount(bUpdLineCount):
                         filename = change.filepath_unicode()
                         changetype = change.change_type()
@@ -450,10 +451,11 @@ class SVNLog2Sqlite:
         
     def CreateTables(self):
         cur = self.dbcon.cursor()
-        cur.execute("create table if not exists SVNLog(revno integer, commitdate timestamp, author text, msg text, \
+        cur.execute("create table if not exists SVNLog(revno integer PRIMARY KEY, commitdate timestamp, author text, msg text, \
                             addedfiles integer, changedfiles integer, deletedfiles integer)")
-        cur.execute("create table if not exists SVNLogDetail(revno integer, changedpathid integer, changetype text, copyfrompathid integer, copyfromrev integer, \
-                    pathtype text, linesadded integer, linesdeleted integer, lc_updated char, entrytype char)")
+        cur.execute("create table if not exists SVNLogDetail(id integer PRIMARY KEY AUTOINCREMENT, revno integer REFERENCES `SVNLog` (`revno`) ON DELETE CASCADE, \
+                changedpathid integer REFERENCES `SVNPaths` (`id`), changetype text, copyfrompathid integer, copyfromrev integer, \
+                    pathtype text, linesadded integer, linesdeleted integer, lc_updated char, entrytype char, diff text)")
         cur.execute("CREATE TABLE IF NOT EXISTS SVNPaths(id INTEGER PRIMARY KEY AUTOINCREMENT, path text, relpathid INTEGER DEFAULT null)")
         try:
                 #create VIEW IF NOT EXISTS was not supported in default sqlite version with Python 2.5
