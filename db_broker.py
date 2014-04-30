@@ -15,7 +15,7 @@ class DbBroker(object):
 
     def connect(self):
         self.conn = sqlite3.connect(self.db_name)
-        self.conn.row_factory = sqlite3.Row()
+        self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
     def get_last_rev(self):
@@ -47,36 +47,51 @@ class DbBroker(object):
             file_dict[f.filename] = f.product
             filenames.append(f.filename)
 
-        sql = 'SELECT * FROM %s WHERE filename IN ( %s )' % (DbBroker.SVNFILE_TABLE, "'" + ', '.join(filenames) + "'")
-        print sql
-        self.cursor.execute(sql)
-        existing_files = self.cursor.fetchall()
+        existing_files = self.find_existing_files(filenames)
 
         # Make list of existing ids while paring file_dict down for insert
-        existing_ids = []
+        ids = []
         for existing in existing_files:
             del file_dict[existing['filename']]
-            existing_ids.append(existing['id'])
+            ids.append(existing['svnfile_id'])
 
         if file_dict:
             self.insert_new_files(file_dict)
 
         # Get the ids out...
+        new_ids = self.get_ids_from_filenames(file_dict.keys())
+
+        return ids.extend(new_ids)
+
+    def associate_revs(self, rev_id, file_ids):
+        values = [ (rev_id, file_id) for file_id in file_ids ]
+        sql = "INSERT INTO %s VALUES ( ?, ? )" % ( DbBroker.REV_FILE_TABLE )
+        return self.cursor.executemany(sql, values)
+
 
     def find_new_files(self, svnfiles):
         pass
 
+    def find_existing_files(self, filenames):
+        sql = 'SELECT * FROM %s WHERE filename IN ( %s )' % (DbBroker.SVNFILE_TABLE, self.make_placeholders(filenames))
+        self.cursor.execute(sql, filenames)
+        existing_files = self.cursor.fetchall()
+        return existing_files
+
     def insert_new_files(self, file_dict):
+        insert_sql = 'INSERT INTO %s (filename, product) VALUES (?,?)' % (DbBroker.SVNFILE_TABLE)
+        self.cursor.executemany(insert_sql, file_dict.items())
+        self.conn.commit()
 
-        # Create value strings for insertion
-        values = []
-        for fname, product in file_dict:
-            value = "( '%s', '%s' )" % ( fname, product )
-            values.append(value)
+    def get_ids_from_filenames(self, filenames):
+        sql = 'SELECT svnfile_id FROM %s WHERE filename IN ( %s )' % (DbBroker.SVNFILE_TABLE, self.make_placeholders(filenames))
+        # Makes a list of tuples
+        ids = [ id for id in self.cursor.execute(sql, filenames)]
+        if ids:
+            # Unpacks tuples into a list of ints
+            ids = zip(*ids)[0]
+        print ids
+        return ids
 
-        insert_sql = 'INSERT INTO %s (filename, product) VALUES %s' % ( DbBroker.SVNFILE_TABLE, ', '.join(values))
-        print insert_sql
-
-        self.cursor.execute(insert_sql)
-
-
+    def make_placeholders(self, value_list):
+        return ', '.join('?'*len(value_list))

@@ -1,15 +1,18 @@
 import unittest
 import mock
 import db_broker
+import os
 from svn_file import SvnFile
 
 class DbBrokerTests(unittest.TestCase):
-    def __init__(self):
-        pass
 
     def setUp(self):
-        self.broker = db_broker.DbBroker()
-        self.broker.cursor = mock.create_autospec(db_broker.sqlite3.Cursor)
+        self.broker = db_broker.DbBroker('test_subvis_db')
+        self.broker.connect()
+        script_file = open(os.getcwd() + '/initial_create.sql', 'r')
+#        script = script_file.read()
+#        self.broker.cursor.executescript(script)
+#        self.broker.commit()
 
         test_file_a = SvnFile()
         test_file_a.set_filename('/some/test/file/path.py')
@@ -38,7 +41,7 @@ class DbBrokerTests(unittest.TestCase):
         pass
 
     def test_insert_files(self):
-        self.broker
+        self.broker.insert_files(self.test_files)
 
 
     def test_insert_duplicate_files(self):
