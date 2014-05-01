@@ -7,12 +7,12 @@ from svn_file import SvnFile
 class DbBrokerTests(unittest.TestCase):
 
     def setUp(self):
-        self.broker = db_broker.DbBroker('test_subvis_db')
+        self.broker = db_broker.DbBroker(':memory')
         self.broker.connect()
         script_file = open(os.getcwd() + '/initial_create.sql', 'r')
-#        script = script_file.read()
-#        self.broker.cursor.executescript(script)
-#        self.broker.commit()
+        script = script_file.read()
+        self.broker.cursor.executescript(script)
+        self.broker.conn.commit()
 
         test_file_a = SvnFile()
         test_file_a.set_filename('/some/test/file/path.py')
@@ -25,8 +25,9 @@ class DbBrokerTests(unittest.TestCase):
         self.test_files = [test_file_a, test_file_b]
 
     def test_error_connecting(self):
-        #db doesn't exist
-        pass
+        self.broker.conn.close()
+        self.broker.db_name = '/rootdir.db'
+        self.assertRaises(db_broker.sqlite3.OperationalError, self.broker.connect)
 
     def test_connect_success(self):
         pass
@@ -40,8 +41,8 @@ class DbBrokerTests(unittest.TestCase):
     def test_insert_empty(self):
         pass
 
-    def test_insert_files(self):
-        self.broker.insert_files(self.test_files)
+    def test_insert_svnfiles(self):
+        self.broker.insert_svnfiles(self.test_files)
 
 
     def test_insert_duplicate_files(self):

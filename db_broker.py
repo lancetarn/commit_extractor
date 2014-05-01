@@ -32,11 +32,11 @@ class DbBroker(object):
 
     def insert_rev_files(self, rev, time, svnfiles):
         self.insert_rev(rev, time)
-        ids = self.insert_files(rev, svnfiles)
+        ids = self.insert_svnfiles(rev, svnfiles)
         self.associate_files(rev, ids)
         self.set_last_rev(rev)
 
-    def insert_files(self, svnfiles):
+    def insert_svnfiles(self, svnfiles):
         """
         Takes a list of SvnFile objects and adds new entries to the database
         """
@@ -47,7 +47,7 @@ class DbBroker(object):
             file_dict[f.filename] = f.product
             filenames.append(f.filename)
 
-        existing_files = self.find_existing_files(filenames)
+        existing_files = self.get_files_by_name(filenames)
 
         # Make list of existing ids while paring file_dict down for insert
         ids = []
@@ -56,32 +56,40 @@ class DbBroker(object):
             ids.append(existing['svnfile_id'])
 
         if file_dict:
-            self.insert_new_files(file_dict)
+            print file_dict
+            self.insert_files(file_dict)
 
         # Get the ids out...
         new_ids = self.get_ids_from_filenames(file_dict.keys())
 
         return ids.extend(new_ids)
 
+
     def associate_revs(self, rev_id, file_ids):
         values = [ (rev_id, file_id) for file_id in file_ids ]
-        sql = "INSERT INTO %s VALUES ( ?, ? )" % ( DbBroker.REV_FILE_TABLE )
-        return self.cursor.executemany(sql, values)
+        sql = "INSERT INTO %s VALUES ( ?, ? )" % (DbBroker.REV_FILE_TABLE)
+        self.cursor.executemany(sql, values)
+        self.conn.commit()
 
 
-    def find_new_files(self, svnfiles):
-        pass
+    def set_last_rev(self, rev_id):
+        sql = "INSERT INTO %s VALUES ( ? )" % (DbBroker.LAST_REV_TABLE)
+        self.cursor.execute(sql, rev_id)
+        self.conn.commit()
 
-    def find_existing_files(self, filenames):
+
+    def get_files_by_name(self, filenames):
         sql = 'SELECT * FROM %s WHERE filename IN ( %s )' % (DbBroker.SVNFILE_TABLE, self.make_placeholders(filenames))
         self.cursor.execute(sql, filenames)
         existing_files = self.cursor.fetchall()
         return existing_files
 
-    def insert_new_files(self, file_dict):
-        insert_sql = 'INSERT INTO %s (filename, product) VALUES (?,?)' % (DbBroker.SVNFILE_TABLE)
-        self.cursor.executemany(insert_sql, file_dict.items())
+
+    def insert_files(self, file_dict):
+        sql = 'INSERT INTO %s (filename, product) VALUES (?,?)' % (DbBroker.SVNFILE_TABLE)
+        self.cursor.executemany(sql, file_dict.items())
         self.conn.commit()
+
 
     def get_ids_from_filenames(self, filenames):
         sql = 'SELECT svnfile_id FROM %s WHERE filename IN ( %s )' % (DbBroker.SVNFILE_TABLE, self.make_placeholders(filenames))
@@ -92,6 +100,7 @@ class DbBroker(object):
             ids = zip(*ids)[0]
         print ids
         return ids
+
 
     def make_placeholders(self, value_list):
         return ', '.join('?'*len(value_list))
