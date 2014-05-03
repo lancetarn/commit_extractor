@@ -4,10 +4,11 @@ import db_broker
 import os
 from svn_file import SvnFile
 
+
 class DbBrokerTests(unittest.TestCase):
 
     def setUp(self):
-        self.broker = db_broker.DbBroker(':memory')
+        self.broker = db_broker.DbBroker(':memory:')
         self.broker.connect()
         script_file = open(os.getcwd() + '/initial_create.sql', 'r')
         script = script_file.read()
@@ -33,9 +34,9 @@ class DbBrokerTests(unittest.TestCase):
         pass
 
     def test_get_last_rev(self):
-        #test None
-        #test not None
-        #test garbage
+        # test None
+        # test not None
+        # test garbage
         pass
 
     def test_insert_empty(self):
@@ -43,7 +44,6 @@ class DbBrokerTests(unittest.TestCase):
 
     def test_insert_svnfiles(self):
         self.broker.insert_svnfiles(self.test_files)
-
 
     def test_insert_duplicate_files(self):
         pass

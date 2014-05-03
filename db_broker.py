@@ -18,6 +18,7 @@ class DbBroker(object):
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
+    @property
     def get_last_rev(self):
         """
         Retrieves the latest rev that has been entered into the db
@@ -27,7 +28,7 @@ class DbBroker(object):
         return row['last_rev_id']
 
     def set_last_rev(self, rev):
-        sql = 'UPATE %s SET last_rev_id = %d' % (DbBroker.LAST_REV_TABLE, rev)
+        sql = 'UPDATE %s SET last_rev_id = %d' % (DbBroker.LAST_REV_TABLE, rev)
         self.cursor.execute(sql)
 
     def insert_rev_files(self, rev, time, svnfiles):
