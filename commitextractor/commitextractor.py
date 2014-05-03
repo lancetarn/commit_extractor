@@ -22,7 +22,6 @@ class CommitExtractor(object):
         pass
 
     def extract(self):
-        self._parse_config(
         pass
 
 

@@ -1,0 +1,9 @@
+[svn]
+repo = svn+ssh://fake.svn.repo
+start_date = 2013-12-31
+end_date = 2014-02-01
+[db]
+host=localhost
+user=fakeuser
+pass=fakepass
+        

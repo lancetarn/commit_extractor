@@ -1,7 +1,6 @@
-import unittest
-import mock
-import db_broker
 import os
+import unittest
+import db_broker
 from svn_file import SvnFile
 
 
@@ -10,8 +9,11 @@ class DbBrokerTests(unittest.TestCase):
     def setUp(self):
         self.broker = db_broker.DbBroker(':memory:')
         self.broker.connect()
-        script_file = open(os.getcwd() + '/initial_create.sql', 'r')
-        script = script_file.read()
+        script_file = os.path.join(
+            os.path.dirname(__file__), '..', 'initial_create.sql')
+        with open(script_file, 'r') as sf:
+            script = sf.read()
+
         self.broker.cursor.executescript(script)
         self.broker.conn.commit()
 
@@ -28,7 +30,8 @@ class DbBrokerTests(unittest.TestCase):
     def test_error_connecting(self):
         self.broker.conn.close()
         self.broker.db_name = '/rootdir.db'
-        self.assertRaises(db_broker.sqlite3.OperationalError, self.broker.connect)
+        self.assertRaises(
+            db_broker.sqlite3.OperationalError, self.broker.connect)
 
     def test_connect_success(self):
         pass
